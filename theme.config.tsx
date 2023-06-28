@@ -7,7 +7,7 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/currentsea/checktimelockverify_rest_api_docs',
   },
   chat: {
-    link: 'https://discord.com',
+    link: 'https://discord.gg/RQyu7bfv',
   },
   docsRepositoryBase: 'https://github.com/currentsea/checktimelockverify_rest_api_docs',
   footer: {
