@@ -1,0 +1,29 @@
+## Documentation
+This is the documentation for the `coinbin-rest-api-service` which allows you to simply make a `REST` request using a `pubkey` and `unix timestamp` in order to create a timelocked address.  For example, to create a timelocked address for `JAN 1ST, 2025` at `00:00:00UTC` you would simply pass in a request similar to the one shown below:
+
+**WARNING**: Please make sure the timelock you are creating is using the proper timestamp for your given timezone, otherwise you may need to wait approximately 24 hours after the maturity date to release any funds sent to it.
+
+Follow the pattern shown below to make a request to the docker container to generate a timelock address using REST.
+
+* Be sure to replace **`${MY_UNIX_TIMESTAMP_GOES_HERE}`** with your 10 digit long unix timestamp indicated when the funds should be unlocked
+* Replace **`${MY_PUBKEY_GOES_HERE}`** with a `P2PKH` public key representing the signing address for your timelock
+* You should have access to the private key corresponding to the public key of the `P2PKH` address in order to properly sign a timelocked transaction.
+
+```
+curl -X POST --header "Content-Type: application/json" --data '{"pubkey":"${MY_PUBKEY_GOES_HERE}","hodl_date":"${MY_UNIX_TIMESTAMP_GOES_HERE}"}' http://localhost:8050/btc/timelock_address
+```
+
+Below is an example of a successful call to the REST service used to generate a timelocked adddress.
+```
+$ docker pull currentsea/coinbin-checktimelockverify-rest-api
+$ docker run -p 8050:8050 -d docker.io/currentsea/coinbin-checktimelockverify-rest-api:latest
+$ curl -XPOST --data '{"pubkey":"03fb35c16523aa099facd9270a525c7a0c1562ea18f531dd7d1c524c729ea346b7","hodl_date":"1735689600"}' http://localhost:8050/btc/timelock_address
+{"address":"3DvaVvGsox36qGLyZGGog1ZNzNFPEx2Sba","redeemScript":"0480857467b1752103fb35c16523aa099facd9270a525c7a0c1562ea18f531dd7d1c524c729ea346b7ac","pubkey":"03fb35c16523aa099facd9270a525c7a0c1562ea18f531dd7d1c524c729ea346b7","hodl_date":"1735689600"}
+```
+
+Lets examine the output from our call above:
+
+* We created a timelocked address that can send transactions after 1735689600 has elapsed in unix time (i.e. **January 1st, 2025**) which is represented as `address` and is a `P2SH` based address of **3DvaVvGsox36qGLyZGGog1ZNzNFPEx2Sba**
+* The **pubkey** can be used to determine which `P2PKH` key needs to be used in signing a transaction for the timelocked address, in this case **`03fb35c16523aa099facd9270a525c7a0c1562ea18f531dd7d1c524c729ea346b7`** which corresponds to the bitcoin address of **`12ZsLE2qiUxytcxecHEkn2cK7iAEhWU4DH`**
+* A **redeemScript** which can be used to create a raw transaction to later be signed and published to the blockchain once the `OP_CHECKTIMELOCKVERIFY` condition in the `P2SH` script is satisfied.
+* In a nutshell: The person who holds the **private key** for the address **12ZsLE2qiUxytcxecHEkn2cK7iAEhWU4DH** can sign any transaction from the **P2SH** address **3DvaVvGsox36qGLyZGGog1ZNzNFPEx2Sba** after January 1st, 2025 UTC time has passed.
